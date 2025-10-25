@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yu-Gi-Oh Game - Advanced Interactive System</title>
+<link rel="stylesheet" href="styles.css">
+
+</head>
+<body> 
+  <!-- Battle Status Display -->
+  <div class="battle-status" id="battleStatus">
+    <div id="battleMessage">Battle in progress...</div>
+  </div>
+
+  <!-- Game Container -->
+  <div class="game-container">
+    <!-- Main Play Area (Center) -->
+    <div class="main-play-area">
+      <!-- Place field or game zones here if needed, otherwise leave empty or insert your current play field markup -->
+    </div>
+
+    <!-- Right Control Bar -->
+    <div class="game-controls-bar">
+      <button class="phase-indicator" id="ep-button">EP</button>
+      <div class="player2-deck-section">
+        
+        <div class="player2-deck-count" id="player2DeckCount">2</div>
+      </div>
+      
+      <!-- Transfer Direction Buttons -->
+<button id="transfer-p2-btn" class="transfer-btn p2" title="Transfer to Player 2 Hand (Top)">▲</button>
+<button id="transfer-p1-btn" class="transfer-btn p1" title="Transfer to Player 1 Hand (Bottom)">▼</button>
+
+
+
+<!-- New ATK/DEF Modifier Buttons -->
+<button id="atk-mod-btn" class="mod-btn" data-stat="atk">+100 ATK</button>
+<button id="def-mod-btn" class="mod-btn" data-stat="def">+100 DEF</button>
+
+      <button class="phase-indicator" id="mp-button">MP</button>
+      <button class="phase-indicator" id="bp-button">BP</button>
+      <!--<button class="phase-indicator" id="ep-button">EP</button> -->
+      <button id="simulator-button" class="simulator-btn">S</button>
+      <button id="fullscreenBtn" class="fullscreen-button">Fullscreen</button>
+      <button class="bring-cards-button"" onclick="yugiohGame ? yugiohGame.showBringCardsPopup() : console.log('Game not ready')">⚡</button>
+      <div class="lp-display player2">
+        <span id="player2LP">8000</span>
+      </div>
+      <div class="lp-display player1">
+        <span id="player1LP">8000</span>
+      </div>
+      
+      <button class="check-section">🔎</button>
+      <div class="player1-deck-section">
+        
+        <div class="player1-deck-count" id="player1DeckCount">2</div>
+      </div>
+      <button class="phase-indicator" id="ep-button-2">EP</button>
+    </div>
+  </div>
+</body>
+
+<!-- Main Section - Game Field -->
+<div class="main-section">
+<div class="game-field-row player-hand-top" id="player2HandTop">
+<!-- Player 2 hand cards will appear here -->
+</div>
+<div class="game-field-row player2-spell-trap" id="player2SpellTrapField">
+<!-- Player 2 spell/trap field cards will appear here -->
+</div>
+<div class="game-field-row player2-monster" id="player2MonsterField">
+<!-- Player 2 monster field cards will appear here -->
+</div>
+<div class="game-field-row player1-monster" id="player1MonsterField">
+<!-- Player 1 monster field cards will appear here -->
+</div>
+<div class="game-field-row player1-spell-trap" id="player1SpellTrapField">
+<!-- Player 1 spell/trap field cards will appear here -->
+</div>
+<div class="game-field-row player-hand-bottom" id="player1HandBottom">
+<!-- Player 1 hand cards will appear here -->
+</div>
+</div>
+
+
+<!-- Load JavaScript files in correct order -->
+<script src="deck1.js"></script>
+<script src="deck2.js"></script>
+<script src="game.js"></script>
+<script src="utils.js"></script>
+
+<script>
+document.getElementById('fullscreenBtn').addEventListener('click', () => {
+  if (!document.fullscreenElement &&
+      !document.webkitFullscreenElement &&
+      !document.msFullscreenElement) {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(err => {
+        console.error(`Failed to enable fullscreen: ${err.message}`);
+      });
+    } else if (elem.webkitRequestFullscreen) { // Safari
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { // IE11
+      elem.msRequestFullscreen();
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { // Safari
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { // IE11
+      document.msExitFullscreen();
+    }
+  }
+});
+
+
+</script>
+
+
+
+</html>

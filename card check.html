@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yu-Gi-Oh Deck Display</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .stars {
+  background: #222222; /* Change to any color you want */
+  padding: 0;
+  border-radius: 0;
+}
+
+
+
+
+    
+    
+    body {
+      background: #34495e;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    #big-card-display {
+      margin-bottom: 20px;
+    }
+    #big-card-display .yugioh-card {
+      width: 200px;
+      height: 280px;
+      cursor: default;
+      box-shadow: 0 0 20px 3px yellow;
+      transform: scale(1.2);
+      transition: none;
+    }
+    #thumbnails-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 50px);
+      grid-gap: 6px;
+    }
+    #pagination {
+      margin-top: 12px;
+      user-select: none;
+      font-size: 16px;
+    }
+    button.nav-button {
+      background: #2c3e50;
+      border: 2px solid #1a252f;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      margin: 0 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+    }
+    button.nav-button:hover {
+      background: #e67e22;
+    }
+    .thumbnail-selected.yugioh-card {
+      border: 3px solid yellow !important;
+      box-shadow: 0 0 15px yellow !important;
+      z-index: 20;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="big-card-display" style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px;">
+  <div id="big-card-container">
+    <!-- The big card element with class yugioh-card will be inserted here dynamically -->
+  </div>
+  <div id="card-description" style="flex: 1; max-width: 400px; background-color: #222; padding: 10px; border-radius: 8px; box-shadow: 0 0 12px #aa0000; color: #eee; font-size: 1rem; line-height: 1.3; user-select:none;">
+    Card description will appear here
+  </div>
+</div>
+
+
+  <div id="thumbnail-navigation">
+    <button class="nav-button" id="cursor-left" title="Move Cursor Left">&#x25c0;</button>
+    <div id="thumbnails-grid"></div>
+    <button class="nav-button" id="cursor-right" title="Move Cursor Right">&#x25b6;</button>
+  </div>
+
+  <div id="pagination">
+    <button class="nav-button" id="page-prev" title="Previous Page">&#x25c4;</button>
+    <span id="page-info">Page 1 / 1</span>
+    <button class="nav-button" id="page-next" title="Next Page">&#x25ba;</button>
+  </div>
+
+  <script src="deck1.js"></script>
+  <script src="deck2.js"></script>
+  <script>
+    const allCards = (typeof player1Deck !== "undefined" && typeof player2Deck !== "undefined")
+                     ? player1Deck.concat(player2Deck)
+                     : [];
+
+    const THUMBNAILS_PER_PAGE = 18;
+    let currentPage = 0;
+    let currentCursor = 0;
+
+    const bigCardDisplay = document.getElementById('big-card-display');
+    const thumbnailsGrid = document.getElementById('thumbnails-grid');
+    const pageInfo = document.getElementById('page-info');
+
+    function createCardElement(card, isBig = false) {
+  const cardDiv = document.createElement("div");
+  cardDiv.className = "yugioh-card";
+  if (isBig) {
+    cardDiv.style.width = "250px";
+    cardDiv.style.height = "350px";
+    cardDiv.style.boxShadow = "0 0 20px 3px yellow";
+    cardDiv.style.position = "relative";
+    cardDiv.style.overflow = "hidden";
+  } else {
+    cardDiv.style.width = "50px";
+    cardDiv.style.height = "70px";
+  }
+
+  // CLASS LOGIC: monster/spell/trap
+  if (card.atr) {
+    const atrLower = card.atr.toLowerCase();
+    console.log("  Card attribute:", atrLower);
+    if (atrLower === "spell") {
+      cardDiv.classList.add("spell");
+      console.log("  → Added 'spell' class");
+    } else if (atrLower === "trap") {
+      cardDiv.classList.add("trap");
+      console.log("  → Added 'trap' class");
+    } else {
+      // Everything else is a monster
+      cardDiv.classList.add("monster");
+      console.log("  → Added 'monster' class");
+    }
+  } else {
+    console.log("  ⚠️ WARNING: card.atr is missing!");
+  }
+
+  // Card name at top (large font if big)
+  const nameDiv = document.createElement("div");
+  nameDiv.className = "card-name";
+  nameDiv.textContent = card.cn || "Unknown";
+  if (isBig) {
+    nameDiv.style.fontSize = "1.6em";
+    nameDiv.style.fontWeight = "bold";
+    nameDiv.style.padding = "6px 12px 4px 12px";
+    nameDiv.style.overflow = "hidden";
+    nameDiv.style.whiteSpace = "nowrap";
+    nameDiv.style.textOverflow = "ellipsis";
+  }
+  cardDiv.appendChild(nameDiv);
+
+  // Stars at top only if big
+  if (isBig && card.tr) {
+    const starsDiv = document.createElement("div");
+    starsDiv.className = "stars";
+    const starsCount = parseInt(card.tr, 10);
+    if (!isNaN(starsCount)) {
+      starsDiv.textContent = "★".repeat(starsCount);
+      starsDiv.style.fontSize = "1.3em";
+      starsDiv.style.color = "gold";
+      starsDiv.style.letterSpacing = "2px";
+      starsDiv.style.paddingLeft = "12px";
+      starsDiv.style.marginBottom = "4px";
+      starsDiv.style.overflow = "hidden";
+      starsDiv.style.whiteSpace = "nowrap";
+      starsDiv.style.textOverflow = "ellipsis";
+     
+    }
+    cardDiv.appendChild(starsDiv);
+  }
+
+  // Image
+  const imageDiv = document.createElement("div");
+  imageDiv.className = "card-image";
+  imageDiv.style.width = "100%";
+  
+  
+  
+ 
+
+  imageDiv.style.overflow = "hidden";
+  if (card.cn) {
+    const img = document.createElement("img");
+    img.src = "images/" + card.cn + ".jpg";
+    img.alt = card.cn;
+    
+    img.style.width= "100%";
+     img.style.height= "100%";
+
+  img.style.objectFit = "contain";
+
+    img.onerror = () => { imageDiv.textContent = "NO IMAGE"; };
+    imageDiv.appendChild(img);
+  } else {
+    imageDiv.textContent = "NO IMAGE";
+  }
+  cardDiv.appendChild(imageDiv);
+
+  // Monster type at bottom only (big card)
+  if (isBig) {
+    const typeDiv = document.createElement("div");
+    typeDiv.className = "tp-class";
+    typeDiv.style.fontSize = "1.2em";
+    typeDiv.style.fontWeight = "bold";
+    typeDiv.style.textAlign = "center";
+    typeDiv.style.marginTop = "6px";
+    typeDiv.style.overflow = "hidden";
+    typeDiv.style.whiteSpace = "nowrap";
+    typeDiv.style.textOverflow = "ellipsis";
+    typeDiv.textContent = card.tp ? card.tp.toUpperCase() : "N/A";
+    cardDiv.appendChild(typeDiv);
+  }
+
+   // ATK/DEF row (monsters only - not spell or trap)
+  if (card.atr && card.atr.toLowerCase() !== 'spell' && card.atr.toLowerCase() !== 'trap') {
+    console.log("  → Adding ATK/DEF:", card.ak, "/", card.df);
+    const atkdefDiv = document.createElement("div");
+    atkdefDiv.className = "ak-df-class";
+    atkdefDiv.textContent = ` ${card.ak || 0} /  ${card.df || 0}`;
+    if (isBig) {
+      atkdefDiv.style.fontSize = "1.2em";
+      atkdefDiv.style.padding = 0;
+      atkdefDiv.style.overflow = "visible";
+      atkdefDiv.style.whiteSpace = "nowrap";
+      
+    }
+    cardDiv.appendChild(atkdefDiv);
+  } else {
+    console.log("  → Skipping ATK/DEF (spell/trap card)");
+  }
+
+  
+
+  return cardDiv;
+}
+
+
+    function playCardAudio(card) {
+      try {
+        const audio = new Audio("cards audio/" + card.cn + ".mp3");
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
+      } catch(e) {}
+    }
+
+    function displayBigCard(card) {
+  const bigCardContainer = document.getElementById('big-card-container');
+  const cardDescArea = document.getElementById('card-description');
+  bigCardContainer.innerHTML = '';
+  const bigCard = createCardElement(card, true);
+  bigCardContainer.appendChild(bigCard);
+
+  cardDescArea.textContent = card.desc || "No description available.";
+
+  playCardAudio(card);
+}
+
+
+    function loadThumbnails() {
+      thumbnailsGrid.innerHTML = '';
+      const start = currentPage * THUMBNAILS_PER_PAGE;
+      const end = Math.min(start + THUMBNAILS_PER_PAGE, allCards.length);
+
+      for (let i = start; i < end; i++) {
+        const card = allCards[i];
+        const thumb = createCardElement(card);
+
+        if (i === currentPage * THUMBNAILS_PER_PAGE + currentCursor) {
+          thumb.classList.add('thumbnail-selected');
+        }
+        thumb.dataset.index = i;
+        thumb.style.cursor = "pointer";
+        thumb.addEventListener('click', () => {
+          currentPage = Math.floor(i / THUMBNAILS_PER_PAGE);
+          currentCursor = i % THUMBNAILS_PER_PAGE;
+          updateDisplay();
+        });
+        thumbnailsGrid.appendChild(thumb);
+      }
+      updatePageInfo();
+    }
+
+    function updatePageInfo() {
+      const totalPages = Math.ceil(allCards.length / THUMBNAILS_PER_PAGE);
+      pageInfo.textContent = `Page ${currentPage + 1} / ${totalPages}`;
+    }
+
+    function updateDisplay() {
+      loadThumbnails();
+      const index = currentPage * THUMBNAILS_PER_PAGE + currentCursor;
+      if (index < allCards.length) {
+        displayBigCard(allCards[index]);
+      }
+    }
+
+    function moveCursorLeft() {
+      if (currentCursor > 0) {
+        currentCursor--;
+      } else if (currentPage > 0) {
+        currentPage--;
+        currentCursor = THUMBNAILS_PER_PAGE - 1;
+      }
+      updateDisplay();
+    }
+
+    function moveCursorRight() {
+      const maxIndex = allCards.length - 1;
+      if ((currentPage * THUMBNAILS_PER_PAGE + currentCursor) < maxIndex) {
+        if (currentCursor < THUMBNAILS_PER_PAGE -1) {
+          currentCursor++;
+        } else {
+          currentCursor = 0;
+          currentPage++;
+        }
+      }
+      updateDisplay();
+    }
+
+    function prevPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        currentCursor = 0;
+        updateDisplay();
+      }
+    }
+
+    function nextPage() {
+      const maxPage = Math.ceil(allCards.length / THUMBNAILS_PER_PAGE) - 1;
+      if (currentPage < maxPage) {
+        currentPage++;
+        currentCursor = 0;
+        updateDisplay();
+      }
+    }
+
+    window.addEventListener('keydown', e => {
+      switch(e.key) {
+        case "ArrowLeft": moveCursorLeft(); e.preventDefault(); break;
+        case "ArrowRight": moveCursorRight(); e.preventDefault(); break;
+        case "ArrowUp": prevPage(); e.preventDefault(); break;
+        case "ArrowDown": nextPage(); e.preventDefault(); break;
+      }
+    });
+
+    document.getElementById('cursor-left').addEventListener('click', moveCursorLeft);
+    document.getElementById('cursor-right').addEventListener('click', moveCursorRight);
+    document.getElementById('page-prev').addEventListener('click', prevPage);
+    document.getElementById('page-next').addEventListener('click', nextPage);
+
+    updateDisplay();
+  </script>
+
+</body>
+</html>
